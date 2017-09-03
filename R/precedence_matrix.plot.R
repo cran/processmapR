@@ -11,11 +11,11 @@
 
 plot.precedence_matrix <- function(x, ...) {
 
-	type <- attr(data, "matrix_type")
+	type <- attr(x, "matrix_type")
 
 	if(type == "absolute") {
 
-		data %>%
+		x %>%
 			ggplot(aes(antecedent, consequent)) +
 			geom_tile(aes(fill = n)) +
 			geom_text(aes(label = n), color = "white", fontface = "bold")  +
@@ -29,7 +29,7 @@ plot.precedence_matrix <- function(x, ...) {
 
 		return(p)
 	} else if(type == "relative") {
-		data %>%
+		x %>%
 			ggplot(aes(antecedent, consequent)) +
 			geom_tile(aes(fill = rel_n)) +
 			geom_text(aes(label = round(rel_n*100, 2)), color = "white", fontface = "bold") +
@@ -43,7 +43,7 @@ plot.precedence_matrix <- function(x, ...) {
 
 		return(p)
 	} else if(type == "relative_antecedent") {
-		data %>%
+		x %>%
 			ggplot(aes(antecedent, consequent)) +
 			geom_tile(aes(fill = rel_antecedent)) +
 			geom_text(aes(label = round(rel_antecedent*100, 2)), color = "white", fontface = "bold") +
@@ -58,7 +58,7 @@ plot.precedence_matrix <- function(x, ...) {
 		p <- p + labs(x = "Antecedent", y = "Consequent")
 		return(p)
 	} else if(type == "relative_consequent") {
-		data %>%
+		x %>%
 			ggplot(aes(antecedent, consequent)) +
 			geom_tile(aes(fill = rel_consequent)) +
 			geom_text(aes(label = round(rel_consequent*100,2)), color = "white", fontface = "bold") +
