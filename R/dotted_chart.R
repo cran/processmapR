@@ -30,6 +30,10 @@ dotted_chart <- function(eventlog,
 	} else if(is.na(color)) {
 		color_flag <- F
 		color <- quo("undefined")
+	} else {
+	  #Create a color vector
+	  qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
+	  col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
 	}
 
 
@@ -63,9 +67,6 @@ dotted_chart <- function(eventlog,
 				   end_relative = end - start_case) -> data
 	}
 
-
-
-
 	if(x == "absolute") {
 		if(y == "start") {
 			data %>%
@@ -94,7 +95,7 @@ dotted_chart <- function(eventlog,
 
 
 	if(color_flag) {
-		p + geom_point(aes(color = color)) + scale_color_brewer(name = color, palette = "Spectral") -> p
+		p + geom_point(aes(color = color)) + scale_color_manual(values = col_vector) -> p
 	} else {
 		p + geom_point(color = "grey") -> p
 	}
@@ -144,6 +145,47 @@ idotted_chart <- function(eventlog) {
 							 y = input$y,
 							 color = input$color,
 							 units = input$units)
+		})
+
+		observeEvent(input$done, {
+			stopApp()
+		})
+	}
+
+	runGadget(shinyApp(ui, server), viewer = dialogViewer("Interactive Dotted Chart", height = 900, width = 1200))
+
+}
+
+
+#' @export iplotly_dotted_chart
+
+iplotly_dotted_chart <- function(eventlog) {
+
+	ui <- miniPage(
+		gadgetTitleBar("Interactive Dotted Chart"),
+		miniContentPanel(
+			column(width = 2,
+				   selectizeInput("x", "x-axis:", choices = c("relative","absolute"), selected = "absolute"),
+				   selectizeInput("y", "y-axis order:", choices = c("start","end","duration"), selected = "start"),
+				   selectizeInput("units", "Time units:", choices = c("min","hours","days","weeks"), selected = "hours"),
+				   selectizeInput("color", "Color:", choices = c(NA,NULL,colnames(eventlog)), selected = "event")
+			),
+			column(width = 10,
+				   plotlyOutput("plotly_dotted_chart")
+			)
+		)
+	)
+
+
+
+	server <- function(input, output, session){
+		output$plotly_dotted_chart <- renderPlotly({
+			eventlog %>%
+				dotted_chart(x = input$x,
+							 y = input$y,
+							 color = input$color,
+							 units = input$units) %>% 
+		    ggplotly()
 		})
 
 		observeEvent(input$done, {
