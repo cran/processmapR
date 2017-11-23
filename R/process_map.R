@@ -132,15 +132,13 @@ process_map <- function(eventlog, type = frequency("absolute") , render = T) {
 		}
 
 	} else if(attr(type, "perspective") == "performance") {
+	  # Correspond the edge thickness to the mean time and color to the frequency
 		edges %>%
 			ungroup() %>%
 	    mutate(penwidth = 1 + 5*(mean_time - min(mean_time))/as.integer(max(mean_time) - min(mean_time)),
 	           color = gray(1 - ( ( (n - min(n))/(max(n) - min(n)) ) + 0.1*( 1- ((n - min(n))/(max(n) - min(n))) ) ))) -> edges
-			#mutate(penwidth = 1 + 5*(mean_time - min(mean_time))/as.integer(max(mean_time) - min(mean_time))) -> edges
-	} else {
-	  stop("Unknown perspective. Use \"perspective\" or \"performance\"")
-	}
-
+	} 
+	
 	if(attr(type, "perspective") == "frequency") {
 		eventlog %>%
 			activities() %>%
@@ -152,8 +150,6 @@ process_map <- function(eventlog, type = frequency("absolute") , render = T) {
 			group_by(!!as.symbol(activity_id(eventlog))) %>%
 			summarize(absolute_frequency = type(processing_time)) %>%
 			arrange(!!as.symbol(activity_id(eventlog))) -> nodes
-	} else {
-	  stop("Unknown perspective. Use \"perspective\" or \"performance\"")
 	}
 
 
@@ -226,31 +222,19 @@ process_map <- function(eventlog, type = frequency("absolute") , render = T) {
   	# 						 color = "grey",
   	# 						 fontname = "Arial")
 	} else if(attr(type, "perspective") == "performance") {
-	  if(body(type) == "UseMethod(\"mean\")") {
-  	  edges_df <- create_edge_df(from = edges$node_id +1,
-  	                             to= edges$next_node_id + 1,
-  	                             label = paste0("  ", round(edges$mean_time,2), " ", attr(type, "units"), "\n", "  ", round(edges$median_time,2), " ", attr(type, "units")),
-  	                             color = edges$color,
-  	                             fontname = "Arial",
-  	                             arrowsize = 1,
-  	                             penwidth = edges$penwidth)
-  	  # edges_df <- create_edges(from = edges$event, to=edges$next_event,
-  	  # 						 label = edges$n,
-  	  # 						 color = "grey",
-  	  # 						 fontname = "Arial")
-	  } else if(body(type) == "UseMethod(\"median\")") {
-	    edges_df <- create_edge_df(from = edges$node_id +1,
-	                               to= edges$next_node_id + 1,
-	                               label = round(edges$median_time,2),
-	                               color = "grey",
-	                               fontname = "Arial",
-	                               arrowsize = 1,
-	                               penwidth = edges$penwidth)
-	    # edges_df <- create_edges(from = edges$event, to=edges$next_event,
-	    # 						 label = edges$n,
-	    # 						 color = "grey",
-	    # 						 fontname = "Arial")
-	}}
+	  edges_df <- create_edge_df(from = edges$node_id +1,
+	                             to= edges$next_node_id + 1,
+	                             label = paste0("  ", round(edges$mean_time,2), " ", attr(type, "units"), "\n", 
+	                                            "  ", round(edges$median_time,2), " ", attr(type, "units")),
+	                             color = edges$color,
+	                             fontname = "Arial",
+	                             arrowsize = 1,
+	                             penwidth = edges$penwidth)
+	  # edges_df <- create_edges(from = edges$event, to=edges$next_event,
+	  # 						 label = edges$n,
+	  # 						 color = "grey",
+	  # 						 fontname = "Arial")
+	  }
 
 	create_graph(nodes_df, edges_df) %>%
 		set_global_graph_attrs(attr = "rankdir",value =  "LR",attr_type =  "graph") -> graph
