@@ -18,9 +18,17 @@
 #' @export precedence_matrix
 
 precedence_matrix <- function(eventlog, type = c("absolute","relative","relative_antecedent","relative_consequent")) {
+	stopifnot("eventlog" %in% class(eventlog))
 
 	type <- match.arg(type)
 	log <- eventlog
+	aid <- NULL
+	case_classifier <- NULL
+	event_classifier <- NULL
+	timestamp_classifier <- NULL
+	antecedent <- NULL
+	consequent <- NULL
+	ts <- NULL
 
 	colnames(log)[colnames(log) == activity_id(eventlog)] <- "event_classifier"
 	colnames(log)[colnames(log) == case_id(eventlog)] <- "case_classifier"
@@ -35,12 +43,25 @@ precedence_matrix <- function(eventlog, type = c("absolute","relative","relative
 		group_by(case_classifier) %>%
 		arrange(ts) %>%
 		mutate(antecedent = event_classifier,
-				  consequent = lead(event_classifier)) %>%
+				  consequent = lead(event_classifier, default = "End")) -> temp
+
+	temp %>%
+		arrange(ts) %>%
+		slice(1:1) %>%
+		mutate(consequent = antecedent,
+			   antecedent = "Start") %>%
+		bind_rows(temp) %>%
 		ungroup() %>%
 		select(antecedent, consequent) %>%
 		na.omit() %>%
 		count(antecedent, consequent) %>%
 		ungroup() -> log
+
+	n_consequents <- length(unique(log$consequent))
+
+	log %>%
+		mutate(antecedent = fct_relevel(antecedent, "Start"),
+			   consequent = fct_relevel(consequent, "End", after = n_consequents - 1)) -> log
 
 	if(type == "absolute") {
 		class(log) <- c("precedence_matrix", class(log))
