@@ -4,14 +4,21 @@
 \alias{process_map}
 \title{Process Map}
 \usage{
-process_map(eventlog, type = frequency("absolute"), render = T)
+process_map(eventlog, type = frequency("absolute"), type_nodes = type,
+  type_edges = type, render = T, ...)
 }
 \arguments{
 \item{eventlog}{The event log object for which to create a process map}
 
 \item{type}{A process map type, which can be created with the functions frequency and performance. The first type focusses on the frequency aspect of a process, while the second one focussed on processing time.}
 
+\item{type_nodes}{A process map type to be used for nodes only, which can be created with the functions frequency and performance. The first type focusses on the frequency aspect of a process, while the second one focussed on processing time.}
+
+\item{type_edges}{A process map type to be used for edges only, which can be created with the functions frequency and performance. The first type focusses on the frequency aspect of a process, while the second one focussed on processing time.}
+
 \item{render}{Whether the map should be rendered immediately (default), or rather an object of type dgr_graph should be returned.}
+
+\item{...}{Deprecated arguments}
 }
 \description{
 A function for creating a process map of an event log.

@@ -29,6 +29,7 @@ precedence_matrix <- function(eventlog, type = c("absolute","relative","relative
 	antecedent <- NULL
 	consequent <- NULL
 	ts <- NULL
+	min_order <- NULL
 
 	colnames(log)[colnames(log) == activity_id(eventlog)] <- "event_classifier"
 	colnames(log)[colnames(log) == case_id(eventlog)] <- "case_classifier"
@@ -39,14 +40,14 @@ precedence_matrix <- function(eventlog, type = c("absolute","relative","relative
 
 	log %>%
 		group_by(case_classifier, event_classifier, aid) %>%
-		summarize(ts = min(timestamp_classifier))  %>%
+		summarize(ts = min(timestamp_classifier), min_order = min(.order))  %>%
 		group_by(case_classifier) %>%
-		arrange(ts) %>%
-		mutate(antecedent = event_classifier,
-				  consequent = lead(event_classifier, default = "End")) -> temp
+		arrange(ts, min_order) %>%
+		mutate(antecedent = as.character(event_classifier),
+				  consequent = lead(as.character(event_classifier), default = "End")) -> temp
 
 	temp %>%
-		arrange(ts) %>%
+		arrange(ts, min_order) %>%
 		slice(1:1) %>%
 		mutate(consequent = antecedent,
 			   antecedent = "Start") %>%
