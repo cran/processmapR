@@ -2,17 +2,18 @@
 #' @description Create a dotted chart to view all events in a glance
 #' @param eventlog Eventlog object
 #' @param x Value for plot on x-axis: absolute time or relative time (since start, since start of week, since start of day)
-#' @param sort Ordering of the cases on y-axis: start, end or duration
+#' @param sort Ordering of the cases on y-axis: start, end or duration, start_week, start_day
 #' @param color Optional, variable to use for coloring dots. Default is the activity identifier. Use NA for no colors.
 #' @param units Time units to use on x-axis in case of relative time.
 #' @param plotly Return plotly object
+#' @param add_end_events Whether to add dots for the complete lifecycle event with a different shape.
 #' @param ... Deprecated arguments
 #' @importFrom tidyr spread
 #' @export dotted_chart
 #'
 
 
-dotted_chart <- function(eventlog, x, sort, color, units, ...) {
+dotted_chart <- function(eventlog, x, sort, color, units, add_end_events = F, ...) {
 	UseMethod("dotted_chart")
 }
 
@@ -54,10 +55,14 @@ dotted_chart_data <- function(eventlog, color, units) {
 	}
 
 	eventlog %>%
+		as.data.frame() %>%
 		group_by(!!case_id_(eventlog),!!activity_id_(eventlog),!!activity_instance_id_(eventlog), color, add = T) %>%
 		summarize(start = min(!!timestamp_(eventlog)),
 				  end = max(!!timestamp_(eventlog))) %>%
-		group_by(!!case_id_(eventlog)) %>%
+		group_by(!!case_id_(eventlog)) -> grouped_activity_log
+
+
+	grouped_activity_log %>%
 		arrange(start) %>%
 		mutate(rank = paste0("ACTIVITY_RANKED_AS_", 1:n())) %>%
 		ungroup() %>%
@@ -67,27 +72,26 @@ dotted_chart_data <- function(eventlog, color, units) {
 		mutate(start_case_rank = 1:n()) %>%
 		select(!!case_id_(eventlog), start_case_rank) -> eventlog_rank_start_cases
 
-	eventlog %>%
-		group_by(!!case_id_(eventlog),!!activity_id_(eventlog),!!activity_instance_id_(eventlog), color, add = T) %>%
-		summarize(start = min(!!timestamp_(eventlog)),
-				  end = max(!!timestamp_(eventlog))) %>%
-		group_by(!!case_id_(eventlog)) %>%
-		mutate(start_week = as.double(timeSinceStartOfWeek(start), units = units)) %>%
-		mutate(start_day = as.double(timeSinceStartOfDay(start), units = units)) %>%
+	grouped_activity_log %>%
+		mutate(start_week = as.double(timeSinceStartOfWeek(start), units = units),
+			   end_week = as.double(timeSinceStartOfWeek(start), units = units)) %>%
+		mutate(start_day = as.double(timeSinceStartOfDay(start), units = units),
+			   end_day = as.double(timeSinceStartOfDay(end), units = units)) %>%
 		mutate(start_case = min(start),
 			   end_case = max(end),
 			   dur = as.double(end_case - start_case, units = units)) %>%
 		mutate(start_case_week = timeSinceStartOfWeek(start_case),
 			   start_case_day = timeSinceStartOfDay(start_case)) %>%
-		mutate(start_relative = as.double(start - start_case, units = units)) %>%
+		mutate(start_relative = as.double(start - start_case, units = units),
+			   end_relative = as.double(end - start_case, units = units)) %>%
 		full_join(eventlog_rank_start_cases)
 }
 
 configure_x_aes <- function(x) {
-	case_when(x == "absolute" ~ "start",
-			  x == "relative" ~ "start_relative",
-			  x == "relative_week" ~ "start_week",
-			  x == "relative_day" ~ "start_day")
+	case_when(x == "absolute" ~ c("start","end"),
+			  x == "relative" ~ c("start_relative", "end_relative"),
+			  x == "relative_week" ~ c("start_week", "end_week"),
+			  x == "relative_day" ~ c("start_day", "end_day"))
 }
 
 configure_y_aes <- function(y) {
@@ -105,7 +109,7 @@ configure_x_labs <- function(x, units) {
 			  x == "absolute" ~ "Time")
 }
 
-dotted_chart_plot <- function(data, mapping, x, y, col_vector, col_label, units) {
+dotted_chart_plot <- function(data, mapping, x, y, col_vector, col_label, units, add_end_events) {
 
 	color <- NULL
 	x_aes <- configure_x_aes(x)
@@ -113,15 +117,20 @@ dotted_chart_plot <- function(data, mapping, x, y, col_vector, col_label, units)
 	x_labs <- configure_x_labs(x, units)
 
 	data %>%
-		ggplot(aes_string(x = x_aes, y = glue("reorder({case_id(mapping)}, desc({y_aes}))"))) +
+		ggplot(aes_string(x = x_aes[[1]], y = glue("reorder({case_id(mapping)}, desc({y_aes}))"))) +
 		scale_y_discrete(breaks = NULL) +
 		labs(x = x_labs,y = "Cases") +
 		theme_light() -> p
 
-	p + geom_point(aes(color = color)) + scale_color_manual(name = col_label, values = col_vector) -> p
+	p + geom_point(aes(color = color, shape = "start")) +
+		scale_color_manual(name = col_label, values = col_vector) -> p
 
-
-
+	if (add_end_events) {
+		p + geom_point(aes(x = !!sym(x_aes[[2]]), color = color, shape = "complete", ), ) +
+			scale_shape_manual(name = "Lifecycle", values = c(1,16)) -> p
+	} else {
+		p + scale_shape_discrete(guide=FALSE) -> p
+	}
 
 	if(x == "relative_week" && units == "secs") {
 		p + scale_x_time(breaks = as.hms(seq(0, 7 * 86400, by = 8 * 3600)), labels = timeFormat) +
@@ -137,28 +146,46 @@ col_vector <- function() {
 	unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
 }
 
-#' @describeIn dotted_chart Dotted chart for event log
 #' @export
 
 
 dotted_chart.eventlog <- function(eventlog,
 								  x = c("absolute","relative","relative_week","relative_day"),
-								  sort = c("start","end","duration", "start_week","start_day"),
+								  sort = NULL,
 								  color = NULL,
-								  units = c("weeks","days","hours","mins","secs"),
+								  units = NULL,
+								  add_end_events = F,
 								  ...) {
 
 	x <- match.arg(x)
-	units <- match.arg(units)
-	sort <- match.arg(sort)
-	sort <- deprecated_y_arg(sort, ...)
 	mapping <- mapping(eventlog)
-	y <- sort
+
+	if(is.null(sort)) {
+		y <-	switch(x,
+					"absolute" = "start",
+					"relative" =  "duration",
+					"relative_week" = "start_week",
+					"relative_day" = "start_day")
+	} else {
+		y <-	match.arg(sort, choices = c("start","end","duration", "start_week","start_day"))
+	}
+
+	if(is.null(units)) {
+		units <-	switch(x,
+						"absolute" = "weeks",
+						"relative" =  "weeks",
+						"relative_week" = "secs",
+						"relative_day" = "secs")
+	} else {
+		units <-	match.arg(units, choices = c("weeks","days","hours","mins","secs"))
+	}
+
+
 
 
 	eventlog %>%
 		dotted_chart_data(color, units) %>%
-		dotted_chart_plot(mapping, x, y, col_vector(), ifelse(is.null(color), activity_id(eventlog), color), units)
+		dotted_chart_plot(mapping, x, y, col_vector(), ifelse(is.null(color), activity_id(eventlog), color), units, add_end_events = add_end_events)
 }
 
 #' @describeIn dotted_chart Dotted chart for grouped event log
@@ -166,25 +193,44 @@ dotted_chart.eventlog <- function(eventlog,
 
 dotted_chart.grouped_eventlog <- function(eventlog,
 										  x = c("absolute","relative","relative_week","relative_day"),
-										  sort = c("start","end","duration", "start_week","start_day"),
+										  sort = NULL,
 										  color = NULL,
-										  units = c("weeks","days","hours","mins","secs"),
+										  units = NULL,
+										  add_end_events = F,
 										  ...) {
 
 
 
 	groups <- groups(eventlog)
 
+
 	x <- match.arg(x)
-	units <- match.arg(units)
-	sort <- match.arg(sort)
-	sort <- deprecated_y_arg(sort, ...)
 	mapping <- mapping(eventlog)
-	y <- sort
+
+	if(is.null(sort)) {
+		y <-	switch(x,
+					"absolute" = "start",
+					"relative" =  "duration",
+					"relative_week" = "start_week",
+					"relative_day" = "start_day")
+	} else {
+		y <-	match.arg(sort, choices = c("start","end","duration", "start_week","start_day"))
+	}
+
+	if(is.null(units)) {
+		units <-	switch(x,
+						"absolute" = "weeks",
+						"relative" =  "weeks",
+						"relative_week" = "secs",
+						"relative_day" = "secs")
+	} else {
+		units <-	match.arg(units, choices = c("weeks","days","hours","mins","secs"))
+	}
+	mapping <- mapping(eventlog)
 
 	eventlog %>%
 		dotted_chart_data(color, units) %>%
-		dotted_chart_plot(mapping, x, y, col_vector(), ifelse(is.null(color), activity_id(eventlog), color), units) +
+		dotted_chart_plot(mapping, x, y, col_vector(), ifelse(is.null(color), activity_id(eventlog), color), units, add_end_events = add_end_events) +
 		facet_grid(as.formula(paste(c(paste(groups, collapse = "+"), "~." ), collapse = "")), scales = "free_y", space = "free")
 
 }

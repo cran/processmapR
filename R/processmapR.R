@@ -37,4 +37,12 @@
 #' @importFrom plotly renderPlotly
 #' @importFrom plotly plotlyOutput
 
-globalVariables(c(".", ".order"))
+utils::globalVariables(c(".", ".order"))
+
+#' @useDynLib processmapR, .registration = TRUE
+#' @importFrom Rcpp sourceCpp
+NULL
+
+.onUnload <- function (libpath) {
+  library.dynam.unload("processmapR", libpath)
+}

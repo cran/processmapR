@@ -3,14 +3,16 @@
 #' @title Trace explorer
 #' @description Explore traces, ordered by relative trace frequency
 #' @param eventlog Eventlog object
-#' @param type Frequent or infrequenct traces to explore
+#' @param type Frequent traces first, or infrequent traces first?
 #' @param coverage The percentage coverage of the trace to explore. Default is 20\% most (in)frequent
 #' @param n_traces Instead of setting coverage, you can set an exact number of traces. Should be an integer larger than 0.
 #' @param raw_data Retrun raw data
 #' @param .abbreviate If TRUE, abbreviate activity labels
 #' @param show_labels If False, activity labels are not shown.
+#' @param label_size Font size of labels
 #' @param scale_fill Set color scale
-#'
+#' @param coverage_labels Change the labels to be shown on the right of the process variants. These can be relative frequency (default), absolute, or cumulative.
+#' @importFrom stats reorder
 #'
 #' @export trace_explorer
 #'
@@ -18,8 +20,10 @@ trace_explorer <- function(eventlog,
 						   coverage = NULL,
 						   n_traces = NULL,
 						   type = c("frequent","infrequent"),
+						   coverage_labels = c("relative","absolute","cumulative"),
 						   .abbreviate = T,
 						   show_labels = T,
+						   label_size = 3,
 						   scale_fill = scale_fill_discrete(h = c(0,360) + 15, l = 40),
 						   raw_data = F) {
 	stopifnot("eventlog" %in% class(eventlog))
@@ -28,7 +32,8 @@ trace_explorer <- function(eventlog,
 
 
 	if(is.null(coverage) & is.null(n_traces)) {
-		coverage <- 0.2
+		coverage <- ifelse(type == "frequent",0.2, 0.05)
+		warning(glue::glue("No coverage or number of traces set. Defaulting to {coverage} for {type} traces."))
 	} else if(!is.null(coverage) & !is.null(n_traces)) {
 		stop("coverage and n_traces cannot be set at the same time. Use one and set the other to NULL")
 	} else if(is.null(coverage)) {
@@ -56,19 +61,20 @@ trace_explorer <- function(eventlog,
 	eventlog %>% case_list %>%
 		rename_("case_classifier" = case_id(eventlog)) -> cases
 
+	# sort descending or ascending?
+	sort_factor <- ifelse(type == "frequent", -1, 1)
+
 	eventlog %>% trace_list %>%
 		mutate(rank_trace = row_number(-absolute_frequency)) %>%
-		arrange(-relative_frequency) %>%
+		arrange(sort_factor*relative_frequency) %>%
 		mutate(cum_freq = cumsum(relative_frequency)) %>%
 		mutate(cum_freq_lag = lag(cum_freq, default = 0)) -> traces
 
 	x <- nrow(traces)
 
 
-	if(type == "frequent" & !is.null(coverage))
+	if(!is.null(coverage))
 		traces <- traces %>% filter(cum_freq_lag < coverage)
-	else if(type == "infrequent" & !is.null(coverage))
-		traces <- traces %>% filter(cum_freq_lag > (1-coverage))
 	else if(type == "frequent")
 		traces <- traces %>% arrange(-relative_frequency) %>% slice(1:n_traces)
 	else
@@ -76,7 +82,7 @@ trace_explorer <- function(eventlog,
 
 	if(is.null(coverage)) {
 		if(x < n_traces)
-		warning("Less traces found than specified number.")
+		warning("Fewer traces found than specified number.")
 	}
 
 
@@ -91,19 +97,45 @@ trace_explorer <- function(eventlog,
 				"event_classifier" = activity_id(eventlog),
 				"timestamp_classifier" = timestamp(eventlog)) %>%
 		as.data.frame %>%
-		group_by(case_classifier, event_classifier, aid) %>%
-		summarize(ts = min(timestamp_classifier),
-				  min_order = min(.order)) %>%
+		arrange(timestamp_classifier, .order) %>%
+		# distinct keeps first entry (=minimum)
+		distinct(case_classifier, event_classifier, aid, .keep_all = TRUE) %>%
+		rename(ts = timestamp_classifier,
+	           min_order = .order) %>%
 		inner_join(cases, by = "case_classifier") %>%
 		group_by(trace_id) %>%
 		filter(case_classifier == first(case_classifier)) %>%
 		inner_join(traces, by = "trace") %>%
 		arrange(ts, min_order) %>%
 		mutate(rank_event = seq_len(n())) %>%
-		ungroup() -> temp
+		ungroup() %>%
+		mutate(facets_rel = reorder(paste0(round(100*relative_frequency,2),"%"), -relative_frequency)) %>%
+		mutate(facets_abs = reorder(absolute_frequency, -relative_frequency)) %>%
+		mutate(facets_cum = reorder(paste0(round(100*cum_freq,2),"%"), cum_freq)) -> temp
+
+	if(length(coverage_labels) > 1) {
+
+		recode(rev(coverage_labels),
+			   "relative" = "facets_rel",
+			   "absolute" = "facets_abs",
+			   "cumulative" = "facets_cum") -> coverage_labels
 
 
 
+
+		facets <- as.formula(paste0(paste(coverage_labels, collapse = "+"), "~."))
+	}
+	else  {
+		coverage_labels <- match.arg(coverage_labels)
+		if(coverage_labels == "relative") {
+			facets <- facets_rel~.
+		} else if(coverage_labels == "absolute") {
+			facets <- facets_abs~.
+			} else if(coverage_labels == "cumulative") {
+			facets <- facets_cum~.
+
+		}
+	}
 
 
 	ABBR <- function(do_abbreviate) {
@@ -123,16 +155,18 @@ trace_explorer <- function(eventlog,
 		temp %>%
 			ggplot(aes(rank_event, as.factor(trace_id))) +
 			geom_tile(aes(fill = event_classifier), color = "white") +
-			facet_grid(reorder(paste0(round(100*relative_frequency,2),"%"), -relative_frequency)~.,scales = "free", space = "free") +
+			facet_grid(facets,scales = "free", space = "free") +
 			scale_y_discrete(breaks = NULL) +
 			labs(y = "Traces", x = "Activities") +
 			scale_fill  +
 			labs(fill = "Activity") +
 			theme_light() +
-			theme(strip.text.y = element_text(angle = 0)) -> p
+			theme(strip.background = element_rect(color = "white"),
+				strip.text.y = element_text(angle = 0),
+				  strip.text = element_text(size = 11)) -> p
 
 		if(show_labels)
-			p + geom_text(aes(label = ABBR(.abbreviate)(event_classifier)), color = "white",fontface = "bold")
+			p + geom_text(aes(label = ABBR(.abbreviate)(event_classifier)), color = "white",fontface = "bold", size = label_size)
 		else
 			p
 
@@ -149,6 +183,7 @@ plotly_trace_explorer <- function(eventlog,
 								  type = c("frequent","infrequent"),
 								  .abbreviate = T,
 								  show_labels = T,
+								  label_size = 5,
 								  scale_fill = scale_fill_discrete(h = c(0,360) + 15, l = 40),
 								  raw_data = F) {
 
@@ -158,6 +193,7 @@ plotly_trace_explorer <- function(eventlog,
 				   type,
 				   .abbreviate,
 				   show_labels,
+				   label_size,
 				   scale_fill,
 				   raw_data) %>%
 		ggplotly
