@@ -2,21 +2,21 @@
 
 #' @title Trace explorer
 #' @description Explore traces, ordered by relative trace frequency
-#' @param eventlog Eventlog object
 #' @param type Frequent traces first, or infrequent traces first?
 #' @param coverage The percentage coverage of the trace to explore. Default is 20\% most (in)frequent
 #' @param n_traces Instead of setting coverage, you can set an exact number of traces. Should be an integer larger than 0.
-#' @param raw_data Retrun raw data
+#' @param raw_data Return raw data
 #' @param .abbreviate If TRUE, abbreviate activity labels
 #' @param show_labels If False, activity labels are not shown.
 #' @param label_size Font size of labels
 #' @param scale_fill Set color scale
 #' @param coverage_labels Change the labels to be shown on the right of the process variants. These can be relative frequency (default), absolute, or cumulative.
+#' @inheritParams dotted_chart
 #' @importFrom stats reorder
 #'
 #' @export trace_explorer
-#'
-trace_explorer <- function(eventlog,
+
+trace_explorer <- function(log,
 						   coverage = NULL,
 						   n_traces = NULL,
 						   type = c("frequent","infrequent"),
@@ -24,12 +24,35 @@ trace_explorer <- function(eventlog,
 						   .abbreviate = T,
 						   show_labels = T,
 						   label_size = 3,
-						   scale_fill = scale_fill_discrete(h = c(0,360) + 15, l = 40),
-						   raw_data = F) {
-	stopifnot("eventlog" %in% class(eventlog))
+						   scale_fill = processmapR:::scale_fill_discrete_bupaR(),
+						   raw_data = F,
+						   eventlog = deprecated()) {
+	UseMethod("trace_explorer")
+}
+
+#' @describeIn trace_explorer Trace explorer eventlog
+#' @export
+
+trace_explorer.eventlog <- function(log,
+						   coverage = NULL,
+						   n_traces = NULL,
+						   type = c("frequent","infrequent"),
+						   coverage_labels = c("relative","absolute","cumulative"),
+						   .abbreviate = T,
+						   show_labels = T,
+						   label_size = 3,
+						   scale_fill = processmapR:::scale_fill_discrete_bupaR(),
+						   raw_data = F,
+							eventlog = deprecated()) {
 	type <- match.arg(type)
 
 
+	if(lifecycle::is_present(eventlog)) {
+		lifecycle::deprecate_warn("0.4.0",
+								  "trace_explorer(eventlog)",
+								  "trace_explorer(log)")
+		log <- eventlog
+	}
 
 	if(is.null(coverage) & is.null(n_traces)) {
 		coverage <- ifelse(type == "frequent",0.2, 0.05)
@@ -58,13 +81,13 @@ trace_explorer <- function(eventlog,
 	cum_freq_lag <- NULL
 	rank_event <- NULL
 
-	eventlog %>% case_list %>%
-		rename_("case_classifier" = case_id(eventlog)) -> cases
+	log %>% case_list %>%
+		rename("case_classifier" := !!case_id_(log)) -> cases
 
 	# sort descending or ascending?
 	sort_factor <- ifelse(type == "frequent", -1, 1)
 
-	eventlog %>% trace_list %>%
+	log %>% trace_list %>%
 		mutate(rank_trace = row_number(-absolute_frequency)) %>%
 		arrange(sort_factor*relative_frequency) %>%
 		mutate(cum_freq = cumsum(relative_frequency)) %>%
@@ -91,11 +114,11 @@ trace_explorer <- function(eventlog,
 	}
 
 
-	eventlog %>%
-		rename_("case_classifier" = case_id(eventlog),
-				"aid" = activity_instance_id(eventlog),
-				"event_classifier" = activity_id(eventlog),
-				"timestamp_classifier" = timestamp(eventlog)) %>%
+	log %>%
+		rename("case_classifier" := !!case_id_(log),
+				"aid" := !!activity_instance_id_(log),
+				"event_classifier" := !!activity_id_(log),
+				"timestamp_classifier" := !!timestamp_(log)) %>%
 		as.data.frame %>%
 		arrange(timestamp_classifier, .order) %>%
 		# distinct keeps first entry (=minimum)
@@ -174,6 +197,33 @@ trace_explorer <- function(eventlog,
 
 }
 
+#' @describeIn trace_explorer Trace explorer activity log
+#' @export
+#'
+trace_explorer.activitylog <- function(log,
+									coverage = NULL,
+									n_traces = NULL,
+									type = c("frequent","infrequent"),
+									coverage_labels = c("relative","absolute","cumulative"),
+									.abbreviate = T,
+									show_labels = T,
+									label_size = 3,
+									scale_fill = processmapR:::scale_fill_discrete_bupaR(),
+									raw_data = F,
+									eventlog = deprecated()) {
+
+	if(lifecycle::is_present(eventlog)) {
+		lifecycle::deprecate_warn("0.4.0",
+								  "trace_explorer(eventlog)",
+								  "trace_explorer(log)")
+		log <- eventlog
+	}
+
+	log %>% bupaR::to_eventlog() %>%
+		trace_explorer(coverage, n_traces, type, coverage_labels, .abbreviate, show_labels, label_size, scale_fill, raw_data)
+}
+
+
 #' @rdname trace_explorer
 #' @export plotly_trace_explorer
 
@@ -181,20 +231,22 @@ plotly_trace_explorer <- function(eventlog,
 								  coverage = NULL,
 								  n_traces = NULL,
 								  type = c("frequent","infrequent"),
+								  coverage_labels = c("relative","absolute","cumulative"),
 								  .abbreviate = T,
 								  show_labels = T,
-								  label_size = 5,
-								  scale_fill = scale_fill_discrete(h = c(0,360) + 15, l = 40),
+								  label_size = 3,
+								  scale_fill = processmapR:::scale_fill_discrete_bupaR(),
 								  raw_data = F) {
 
 	trace_explorer(eventlog,
-				   coverage,
-				   n_traces,
-				   type,
-				   .abbreviate,
-				   show_labels,
-				   label_size,
-				   scale_fill,
-				   raw_data) %>%
-		ggplotly
+				   coverage = coverage,
+				   coverage_labels = coverage_labels,
+				   n_traces = n_traces,
+				   type = type,
+				   .abbreviate = .abbreviate,
+				   show_labels = show_labels,
+				   label_size = label_size,
+				   scale_fill = scale_fill,
+				   raw_data = raw_data) %>%
+		ggplotly()
 }
