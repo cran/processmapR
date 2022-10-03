@@ -25,7 +25,8 @@ resource_map(log, type, render, ..., eventlog = deprecated())
 )
 }
 \arguments{
-\item{log}{\code{\link[bupaR]{log}}: Object of class \code{\link[bupaR]{log}} or derivatives (\code{\link[bupaR]{grouped_log}}, \code{\link[bupaR]{eventlog}}, \code{\link[bupaR]{activitylog}}, etc.).}
+\item{log}{\code{\link[bupaR:log]{log}}: Object of class \code{\link[bupaR:log]{log}} or derivatives (\code{\link[bupaR:grouped_log]{grouped_log}},
+\code{\link[bupaR:eventlog]{eventlog}}, \code{\link[bupaR:activitylog]{activitylog}}, etc.).}
 
 \item{type}{A process map type, which can be created with the functions frequency and performance. The first type focusses on the frequency aspect of a process, while the second one focussed on processing time.}
 
@@ -33,18 +34,18 @@ resource_map(log, type, render, ..., eventlog = deprecated())
 
 \item{...}{Deprecated arguments}
 
-\item{eventlog}{Deprecated. Use log instead.}
+\item{eventlog}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}; please use \code{log} instead.}
 }
 \description{
 A function for creating a resource map of an event log based on handover of work.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{eventlog}: Create resource map for eventlog
+\item \code{resource_map(eventlog)}: Create resource map for eventlog
 
-\item \code{activitylog}: Create resource map for activity log
+\item \code{resource_map(activitylog)}: Create resource map for activity log
+
 }}
-
 \examples{
 \dontrun{
 library(eventdataR)
