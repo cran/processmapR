@@ -122,7 +122,7 @@ dotted_chart_plot <- function(data, mapping, x, y, scale_color, col_label, units
 
 	data %>%
 		mutate(x = !!sym(x_aes[[1L]]),
-			   y = factor(!!sym(y_aes))) %>%
+			   y = fct_reorder(!!sym(mapping$case_id), !!sym(y_aes))) %>%
 		ggplot(aes(x = x, y = fct_rev(y))) +
 		scale_y_discrete(breaks = NULL) +
 		labs(x = x_labs,y = "Cases") +
