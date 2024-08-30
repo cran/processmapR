@@ -1,4 +1,4 @@
-3f5cc45796102e6e465f68ffd02d1d2b *DESCRIPTION
+3a7f6f5dab2a272b99d57fcf5979c91c *DESCRIPTION
 dc98342456ba9dc9489c45237c0cc65e *LICENSE
 511e30b617f21896d7d8f33f0c7c71e8 *NAMESPACE
 1590166bcd779e32f78a4130c0e95d3e *NEWS.md
@@ -25,7 +25,7 @@ de99a440cf4ae399b80a7260d2dd2a17 *R/process_map.R
 bc7cc12c60aee56b02f087b4f6b4536e *R/process_matrix.R
 6e266f3d61d17aa53b3dbd4eb8f89353 *R/processmapR.R
 746da24c5802553932299dcdc18724ce *R/renderProcessMap.R
-742c3b8863270c3f7fdd25ef9f1854bd *R/render_map.R
+57e435c010db95f29a98ded5b63f84aa *R/render_map.R
 a4f15be2359f61951bcfc79a341a8983 *R/resource_map.R
 d7758e2631cec7fcb103b6d8f711a18f *R/resource_matrix.R
 d6127c27564be8b6757e51489ade7bbc *R/trace_explorer.R
@@ -33,7 +33,7 @@ d3ae0c5c7246733ab54fdfaa874d1936 *R/utils.R
 c6b98061ebcfe6a7a053d489b45b804c *R/utils_animateR.R
 fa844cc2a233dfb6c8e03668a581d1fe *README.md
 4c4f479b0fdb679db541b09c42197d2a *build/vignette.rds
-957e98e136cfe6d5e8471d5da775fb44 *inst/doc/processmapr.html
+192b4af4f17b01a029e5659ec306e4fd *inst/doc/processmapr.html
 5da23f6db60af436f6f2bd729b366e26 *inst/doc/processmapr.rmd
 46af4c7d531a6fbfbd9e35530ac87bd3 *inst/htmlwidgets/lib/d3/LICENSE.D3
 1afbdeb8f72b02aa1977deb6381f54ba *inst/htmlwidgets/lib/d3/LICENSE.D3-SIMPLE-SLIDER
@@ -73,8 +73,8 @@ bdd698bc5700679dec2ed5036b311c5c *inst/htmlwidgets/lib/svg-pan-zoom/svg-pan-zoom
 445a09bc4cb709b489decf227cef14a1 *inst/htmlwidgets/lib/viz/LICENSE
 c90685d36cc14c6555c5f877a34501f4 *inst/htmlwidgets/lib/viz/full.render.js
 150bfc8fa908c2a89aa98dc05499df30 *inst/htmlwidgets/lib/viz/viz.js
-e0565862b41e7605eaf3509529bdba42 *inst/htmlwidgets/processanimateR.js
-f56684936af9b48f2c86b7e88cac2dff *inst/htmlwidgets/processanimateR.yaml
+0d0f0a8b85d76f949b6210ad3043e6b6 *inst/htmlwidgets/processmapR.js
+a099b82ecd25c00c7522fd74d08b281b *inst/htmlwidgets/processmapR.yaml
 763a40770cfbce3b4f5d0d4c61c507a1 *man/custom.Rd
 e617f8a05efb37f34d1c0a87b31f0c0e *man/deprecated.Rd
 c85852b438c0c7df2b1b95a630314824 *man/dotted_chart.Rd
