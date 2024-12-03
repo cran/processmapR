@@ -1,6 +1,6 @@
-3a7f6f5dab2a272b99d57fcf5979c91c *DESCRIPTION
+3d19ad270025335bf075315aeaf8ac27 *DESCRIPTION
 dc98342456ba9dc9489c45237c0cc65e *LICENSE
-511e30b617f21896d7d8f33f0c7c71e8 *NAMESPACE
+a4d71ff81e0b4fdd8dc881519827d44d *NAMESPACE
 1590166bcd779e32f78a4130c0e95d3e *NEWS.md
 1d622375e3b2e962c04f86a0a9461b7e *R/RcppExports.R
 1cfafdc65deafc04cfcd3c57fefbc4be *R/create_base_precedence.R
@@ -19,11 +19,11 @@ d2dda50de194e40210bd3812ea8bc730 *R/lined_chart_helpers.R
 0306065127cff08a852b652dd17df28c *R/lined_chart_plotly_i.R
 2e55613dddbf94f0246cf53e00709d1e *R/performance.R
 59df0f3b2e8adf9fc3390efdc220981e *R/precedence_matrix.R
-15bc11ace9a1bfdd0f033d38178145f0 *R/precedence_matrix.plot.R
+65ed0accf3fae28ff0848e95d285085d *R/precedence_matrix.plot.R
 dad17d59003f6a8bbe5f2bcf6bf28c8c *R/processMapOutput.R
 de99a440cf4ae399b80a7260d2dd2a17 *R/process_map.R
 bc7cc12c60aee56b02f087b4f6b4536e *R/process_matrix.R
-6e266f3d61d17aa53b3dbd4eb8f89353 *R/processmapR.R
+f6763761b354c697b01bcea601ea1649 *R/processmapR.R
 746da24c5802553932299dcdc18724ce *R/renderProcessMap.R
 57e435c010db95f29a98ded5b63f84aa *R/render_map.R
 a4f15be2359f61951bcfc79a341a8983 *R/resource_map.R
@@ -32,8 +32,8 @@ d6127c27564be8b6757e51489ade7bbc *R/trace_explorer.R
 d3ae0c5c7246733ab54fdfaa874d1936 *R/utils.R
 c6b98061ebcfe6a7a053d489b45b804c *R/utils_animateR.R
 fa844cc2a233dfb6c8e03668a581d1fe *README.md
-4c4f479b0fdb679db541b09c42197d2a *build/vignette.rds
-192b4af4f17b01a029e5659ec306e4fd *inst/doc/processmapr.html
+d842d31a0060e70ab8aba376fec53b5b *build/vignette.rds
+0a9a4f3f806406423dfd51ee3f8eba73 *inst/doc/processmapr.html
 5da23f6db60af436f6f2bd729b366e26 *inst/doc/processmapr.rmd
 46af4c7d531a6fbfbd9e35530ac87bd3 *inst/htmlwidgets/lib/d3/LICENSE.D3
 1afbdeb8f72b02aa1977deb6381f54ba *inst/htmlwidgets/lib/d3/LICENSE.D3-SIMPLE-SLIDER
@@ -78,7 +78,7 @@ a099b82ecd25c00c7522fd74d08b281b *inst/htmlwidgets/processmapR.yaml
 763a40770cfbce3b4f5d0d4c61c507a1 *man/custom.Rd
 e617f8a05efb37f34d1c0a87b31f0c0e *man/deprecated.Rd
 c85852b438c0c7df2b1b95a630314824 *man/dotted_chart.Rd
-4c532c81241862301cd6c8c99c5dfdd3 *man/export_graph.Rd
+d74d9eeb0d03570df5c97ca5b37aeac4 *man/export_graph.Rd
 9c4817069be4c4f72dad5980b7c4c2ef *man/export_map.Rd
 f64b71472f9fa9cdf98846122b917eb6 *man/figures/README-example1-1.png
 6f93f9506cec7f9439f67392ee30bf59 *man/figures/README-example2-1.png
@@ -102,7 +102,7 @@ ce79e59659ff53b83dccc2afeb4304d3 *man/precedence_matrix_absolute.Rd
 92deb5c87bb92e89eb72d0055b1b6ef1 *man/processMapOutput.Rd
 95d5226dbb5c3b61ae75f17abbf34ad8 *man/process_map.Rd
 d292d82688eb364e28a3628d6fd17fd2 *man/process_matrix.Rd
-12890fb0a96bf7739c9d45a1945a3f2c *man/processmapR.Rd
+6642cb608b1006b8849fb7e11018f422 *man/processmapR.Rd
 732cfdae6fe0dd35923713848551da6e *man/reexports.Rd
 70cbd8070e0218e6d1b2a3fff2361ea5 *man/renderProcessMap.Rd
 e2ab1b8b0cc2aaaebe622a42251fb06c *man/render_map.Rd
@@ -116,7 +116,7 @@ bcd6b67084b6250516dd7e8462063aaa *tests/testthat/_snaps/dotted_chart.md
 4167ca54b7b262794549126e0e80d25b *tests/testthat/_snaps/lined_chart.md
 2d1c6ac02cb6fb11200429f6d0f9db46 *tests/testthat/_snaps/trace_explorer.md
 826bcbed9c9316fb0c61a49f2d95ac35 *tests/testthat/test_dotted_chart.R
-872e53f29bc975b63438262f2366eadd *tests/testthat/test_dotted_chart_helpers.R
+1dfe95371930a6b862ad8862d12ed6ea *tests/testthat/test_dotted_chart_helpers.R
 176df35632c9515e1d71e20b5032358c *tests/testthat/test_lined_chart.R
 8a09352602109e3c38401b7f658db23f *tests/testthat/test_trace_explorer.R
 bcd9ef956561095dc9038c81a604ad0b *tests/testthat/testdata/patients.rda
