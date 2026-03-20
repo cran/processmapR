@@ -57,7 +57,7 @@ resource_map.activitylog <- function(log, type = frequency("absolute"), render =
 		log <- eventlog
 	}
 
-	log %>% bupaR::to_eventlog() %>% resource_map(type,render)
+	log %>% bupaR::to_eventlog() %>% resource_map(type,render, ...)
 
 
 

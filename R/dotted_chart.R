@@ -130,7 +130,7 @@ dotted_chart.grouped_eventlog <- function(log,
   dotted_chart_check_args(log, x, sort, units, color)
 
   log %>%
-    bupaR:::apply_grouped_fun(dotted_chart_data, color, units, .keep_groups = TRUE) %>%
+    apply_grouped_fun(dotted_chart_data, color, units, .keep_groups = TRUE) %>%
     dotted_chart_plot(mapping, x, sort, scale_color, color, units, add_end_events) -> p
 
   return_plotly(p, plotly)

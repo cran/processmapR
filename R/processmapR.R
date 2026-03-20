@@ -14,7 +14,7 @@
 #' @import shiny
 #' @import miniUI
 #' @import forcats
-#' @importFrom tidyr spread
+#' @importFrom tidyr spread unnest
 #' @importFrom glue glue
 #' @importFrom hms as_hms
 #' @importFrom data.table data.table as.data.table dcast.data.table := .SD .N setorder setnames
@@ -28,7 +28,7 @@
 #' @importFrom lifecycle deprecated
 #' @import htmlwidgets
 
-utils::globalVariables(c(".", ".order"))
+utils::globalVariables(c(".", ".order", "id"))
 
 #' @useDynLib processmapR, .registration = TRUE
 #' @importFrom Rcpp sourceCpp

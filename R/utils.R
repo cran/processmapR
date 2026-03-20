@@ -39,7 +39,13 @@ if_start <- function(node, true, false) {
 # Return a plotly instead of ggplot2 if plotly == TRUE
 return_plotly <- function(p, plotly) {
 	if (plotly) {
-		return(ggplotly(p))
+		return(
+			# ggplotly(p, tooltip = c("text")) %>% layout(legend = list(orientation = "h",   # show entries horizontally
+			# 										xanchor = "center",  # use center of legend as anchor
+			# 										x = 0.5,
+			# 										title = "")))
+			ggplotly(p)
+			)
 	} else {
 		return(p)
 	}
